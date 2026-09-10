@@ -63,6 +63,7 @@
   #weather-block .temp{
     font-size: 40px;
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
   }
   #weather-block .desc{
     font-size: 18px;
@@ -73,7 +74,7 @@
   /* ---- main grid ---- */
   #main{
     display:grid;
-    grid-template-columns: 1.1fr 1.4fr 1.1fr;
+    grid-template-columns: minmax(0,1.1fr) minmax(0,1.4fr) minmax(0,1.1fr);
     gap: 20px;
     min-height:0;
   }
@@ -110,6 +111,7 @@
     font-weight: 700;
     line-height: 1;
     letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
   }
   #clock .sec{ font-size: 40px; color: var(--ink-dim); }
 
@@ -131,7 +133,34 @@
   /* calendar */
   #cal-panel h2 .dot{ background: var(--accent-cal); }
   #cal-panel{ flex:1; }
-  #cal-frame{ flex:1; border:0; border-radius:2px; width:100%; min-height:0; background:#fff; }
+  #cal-list{ flex:1; overflow-y:auto; min-height:0; }
+  .cal-daygroup{ margin-bottom: 16px; }
+  .cal-daygroup:last-child{ margin-bottom: 0; }
+  .cal-daylabel{
+    font-size: 14px;
+    color: var(--accent-cal);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 4px;
+  }
+  .cal-event{
+    display:flex;
+    gap: 12px;
+    padding: 6px 0;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .cal-event .time{
+    flex: 0 0 auto;
+    min-width: 90px;
+    color: var(--ink-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .cal-event .title{ flex:1; }
+  .cal-empty{ color: var(--ink-dim); font-size: 15px; padding: 4px 0; }
+  .cal-error{ color: var(--accent-gomi); font-size: 14px; }
 
   /* memo */
   #memo-panel h2 .dot{ background: var(--accent-memo); }
@@ -188,9 +217,7 @@
     <div class="col">
       <div class="panel" id="cal-panel">
         <h2><span class="dot"></span>予定</h2>
-        <iframe id="cal-frame"
-          src="https://calendar.google.com/calendar/embed?src=bellyrie%40gmail.com&ctz=Asia%2FTokyo&mode=AGENDA&showTitle=0&showPrint=0&showCalendars=0&showTz=0&showDate=1&showNav=0&wkst=1"
-          frameborder="0" scrolling="no"></iframe>
+        <div id="cal-list"></div>
       </div>
     </div>
 
@@ -214,6 +241,10 @@ const WEATHER_LON = 135.36;
 // メモ/タスクの保存先(Google Apps Script の Web アプリ URL)
 // まだ準備できていない場合は空のままで構いません(メモ欄はこの端末だけで一時的に動作します)
 const MEMO_API_URL = "https://script.google.com/macros/s/AKfycbzkBhUtK3zD1X_ZX2mJXYEIz7s9WYnGVf9X2oC5Hn4MCbz-kWLZsWx_VRV-pZ8FDp4n7A/exec";
+
+// Googleカレンダー(公開設定済みのカレンダーID と APIキー)
+const CALENDAR_ID = "bellyrie@gmail.com";
+const GOOGLE_API_KEY = "AIzaSyCnFw7dx-Dm8q6E5_Dudp7jssSLhGbIyiQ";
 
 // ごみ収集の基準日(このアプリのカレンダーで確認した実際の日付とズレたら調整してください)
 const GOMI_WED_REF = new Date(2026, 3, 1);  // 2026-04-01(水)= ペットボトルの週
@@ -298,6 +329,79 @@ function updateGomi(){
 }
 updateGomi();
 setInterval(updateGomi, 60*60*1000); // 1時間ごと
+
+// ---- 予定(Google Calendar API) ----
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function fmtDayLabel(date, today){
+  const diff = Math.round((startOfDay(date) - startOfDay(today)) / 86400000);
+  if(diff === 0) return "今日";
+  if(diff === 1) return "明日";
+  return (date.getMonth()+1) + "/" + date.getDate() + "(" + youbiList[date.getDay()] + ")";
+}
+
+async function updateCalendar(){
+  const listEl = document.getElementById("cal-list");
+  if(!GOOGLE_API_KEY){
+    listEl.innerHTML = '<div class="cal-error">Google APIキーが未設定です。</div>';
+    return;
+  }
+  try{
+    const today = startOfDay(new Date());
+    const timeMin = today.toISOString();
+    const rangeEnd = new Date(today); rangeEnd.setDate(rangeEnd.getDate()+8);
+    const url = "https://www.googleapis.com/calendar/v3/calendars/" +
+      encodeURIComponent(CALENDAR_ID) + "/events?key=" + GOOGLE_API_KEY +
+      "&timeMin=" + encodeURIComponent(timeMin) +
+      "&timeMax=" + encodeURIComponent(rangeEnd.toISOString()) +
+      "&singleEvents=true&orderBy=startTime&maxResults=30";
+    const res = await fetch(url);
+    if(!res.ok){
+      listEl.innerHTML = '<div class="cal-error">予定を取得できませんでした(' + res.status + ')。カレンダーの公開設定・APIキーをご確認ください。</div>';
+      return;
+    }
+    const data = await res.json();
+    const events = data.items || [];
+
+    // 日付ごとにグループ化
+    const groups = new Map();
+    for(let i=0;i<8;i++){
+      const d = new Date(today); d.setDate(d.getDate()+i);
+      groups.set(d.toDateString(), { date:d, events:[] });
+    }
+    events.forEach(ev => {
+      const isAllDay = !!ev.start.date;
+      const startDate = isAllDay ? new Date(ev.start.date + "T00:00:00") : new Date(ev.start.dateTime);
+      const key = startDate.toDateString();
+      if(groups.has(key)){
+        groups.get(key).events.push({
+          title: ev.summary || "(タイトルなし)",
+          time: isAllDay ? "終日" : pad(startDate.getHours()) + ":" + pad(startDate.getMinutes())
+        });
+      }
+    });
+
+    let html = "";
+    groups.forEach(group => {
+      html += '<div class="cal-daygroup"><div class="cal-daylabel">' + fmtDayLabel(group.date, today) + '</div>';
+      if(group.events.length === 0){
+        html += '<div class="cal-empty">予定なし</div>';
+      }else{
+        group.events.forEach(ev => {
+          html += '<div class="cal-event"><span class="time">' + ev.time + '</span><span class="title">' + escapeHtml(ev.title) + '</span></div>';
+        });
+      }
+      html += '</div>';
+    });
+    listEl.innerHTML = html;
+  }catch(err){
+    listEl.innerHTML = '<div class="cal-error">予定の取得中にエラーが発生しました。</div>';
+  }
+}
+updateCalendar();
+setInterval(updateCalendar, 15*60*1000); // 15分ごと
 
 // ---- メモ/タスク ----
 const memoEl = document.getElementById("memo-text");
