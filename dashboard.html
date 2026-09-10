@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>おうちダッシュボード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #12181f;
+    --bg-panel: #1b2430;
+    --bg-panel-2: #212c3a;
+    --ink: #ede6da;
+    --ink-dim: #a9a698;
+    --line: #33404f;
+    --accent-gomi: #c77b4b;   /* 柿色: ごみの日 */
+    --accent-cal: #6b9080;    /* 藍緑: カレンダー */
+    --accent-weather: #c9a66b;/* 金鼠: 天気 */
+    --accent-memo: #8f9fc9;   /* 藤色寄り: メモ */
+  }
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; height:100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    overflow: hidden;
+  }
+  .mincho{ font-family: 'Shippori Mincho', serif; }
+
+  #app{
+    display:grid;
+    grid-template-rows: auto 1fr;
+    height:100vh;
+    width:100vw;
+    padding: 28px;
+    gap: 20px;
+  }
+
+  /* ---- header ---- */
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 18px;
+  }
+  #date-block .youbi{
+    font-size: 22px;
+    color: var(--ink-dim);
+    letter-spacing: 0.1em;
+  }
+  #date-block .date{
+    font-size: 40px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+  #weather-block{
+    text-align:right;
+    color: var(--accent-weather);
+  }
+  #weather-block .temp{
+    font-size: 40px;
+    font-weight: 700;
+  }
+  #weather-block .desc{
+    font-size: 18px;
+    color: var(--ink-dim);
+    margin-top: 2px;
+  }
+
+  /* ---- main grid ---- */
+  #main{
+    display:grid;
+    grid-template-columns: 1.1fr 1.4fr 1.1fr;
+    gap: 20px;
+    min-height:0;
+  }
+  .col{ display:flex; flex-direction:column; gap:20px; min-height:0; }
+
+  .panel{
+    background: var(--bg-panel);
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    padding: 20px 24px;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  .panel h2{
+    margin:0 0 14px 0;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--ink-dim);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel h2 .dot{
+    width:8px; height:8px; border-radius:50%;
+    display:inline-block;
+  }
+
+  /* clock */
+  #clock-panel{ flex: 0 0 auto; align-items:center; justify-content:center; }
+  #clock{
+    font-size: 108px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+  #clock .sec{ font-size: 40px; color: var(--ink-dim); }
+
+  /* gomi */
+  #gomi-panel h2 .dot{ background: var(--accent-gomi); }
+  .gomi-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .gomi-row:last-child{ border-bottom:none; }
+  .gomi-row .label{ color: var(--ink-dim); font-size: 15px; }
+  .gomi-row .item{ font-size: 22px; font-weight:700; color: var(--accent-gomi); }
+  .gomi-row .item.none{ color: var(--ink-dim); font-weight:400; font-size:18px; }
+  #gomi-note{ margin-top:10px; font-size:12px; color:var(--ink-dim); line-height:1.5; }
+
+  /* calendar */
+  #cal-panel h2 .dot{ background: var(--accent-cal); }
+  #cal-panel{ flex:1; }
+  #cal-frame{ flex:1; border:0; border-radius:2px; width:100%; min-height:0; background:#fff; }
+
+  /* memo */
+  #memo-panel h2 .dot{ background: var(--accent-memo); }
+  #memo-panel{ flex:1; }
+  #memo-status{ font-size:12px; color: var(--ink-dim); margin-left:auto; }
+  #memo-text{
+    flex:1;
+    resize:none;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--ink);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 18px;
+    line-height: 1.7;
+    padding: 14px;
+    outline:none;
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div id="date-block">
+      <div class="youbi" id="youbi">-</div>
+      <div class="date mincho" id="date">----年--月--日</div>
+    </div>
+    <div id="weather-block">
+      <div class="temp" id="temp">--℃</div>
+      <div class="desc" id="wdesc">読み込み中...</div>
+    </div>
+  </header>
+
+  <div id="main">
+    <div class="col">
+      <div class="panel" id="clock-panel">
+        <div id="clock">--:--<span class="sec">--</span></div>
+      </div>
+      <div class="panel" id="gomi-panel">
+        <h2><span class="dot"></span>ごみの日</h2>
+        <div class="gomi-row">
+          <span class="label">今日</span>
+          <span class="item" id="gomi-today">-</span>
+        </div>
+        <div class="gomi-row">
+          <span class="label">明日</span>
+          <span class="item" id="gomi-tomorrow">-</span>
+        </div>
+        <div id="gomi-note">※基本パターンの自動計算です。祝日等の変更は「さんあ〜る」アプリで必ずご確認ください。</div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel" id="cal-panel">
+        <h2><span class="dot"></span>予定</h2>
+        <iframe id="cal-frame"
+          src="https://calendar.google.com/calendar/embed?src=bellyrie%40gmail.com&ctz=Asia%2FTokyo&mode=AGENDA&showTitle=0&showPrint=0&showCalendars=0&showTz=0&showDate=1&showNav=0&wkst=1"
+          frameborder="0" scrolling="no"></iframe>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel" id="memo-panel">
+        <h2><span class="dot"></span>メモ・タスク<span id="memo-status"></span></h2>
+        <textarea id="memo-text" placeholder="ここにメモやタスクを書いてください。スマホからも編集できます。"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   設定エリア(必要に応じて書き換えてください)
+   ========================================================= */
+// 天気の地点:宝塚市
+const WEATHER_LAT = 34.80;
+const WEATHER_LON = 135.36;
+
+// メモ/タスクの保存先(Google Apps Script の Web アプリ URL)
+// まだ準備できていない場合は空のままで構いません(メモ欄はこの端末だけで一時的に動作します)
+const MEMO_API_URL = "https://script.google.com/macros/s/AKfycbzkBhUtK3zD1X_ZX2mJXYEIz7s9WYnGVf9X2oC5Hn4MCbz-kWLZsWx_VRV-pZ8FDp4n7A/exec";
+
+// ごみ収集の基準日(このアプリのカレンダーで確認した実際の日付とズレたら調整してください)
+const GOMI_WED_REF = new Date(2026, 3, 1);  // 2026-04-01(水)= ペットボトルの週
+const GOMI_FRI_REF = new Date(2026, 3, 3);  // 2026-04-03(金)= 紙・布の週
+
+/* ========================================================= */
+
+// ---- 日付・時計 ----
+const youbiList = ["日","月","火","水","木","金","土"];
+function pad(n){ return String(n).padStart(2,"0"); }
+
+function updateClock(){
+  const now = new Date();
+  document.getElementById("clock").innerHTML =
+    pad(now.getHours()) + ":" + pad(now.getMinutes()) +
+    '<span class="sec">' + pad(now.getSeconds()) + "</span>";
+  document.getElementById("date").textContent =
+    now.getFullYear() + "年" + (now.getMonth()+1) + "月" + now.getDate() + "日";
+  document.getElementById("youbi").textContent = youbiList[now.getDay()] + "曜日";
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ---- 天気(Open-Meteo, APIキー不要) ----
+const weatherCodeMap = {
+  0:["快晴","☀️"],1:["晴れ","🌤️"],2:["晴れ時々曇り","⛅"],3:["曇り","☁️"],
+  45:["霧","🌫️"],48:["霧","🌫️"],
+  51:["小雨","🌦️"],53:["小雨","🌦️"],55:["雨","🌧️"],
+  61:["雨","🌧️"],63:["雨","🌧️"],65:["大雨","🌧️"],
+  71:["雪","🌨️"],73:["雪","🌨️"],75:["大雪","❄️"],
+  80:["にわか雨","🌦️"],81:["にわか雨","🌦️"],82:["激しい雨","⛈️"],
+  95:["雷雨","⛈️"],96:["雷雨","⛈️"],99:["雷雨","⛈️"]
+};
+
+async function updateWeather(){
+  try{
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&current_weather=true&timezone=Asia%2FTokyo`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const cw = data.current_weather;
+    const info = weatherCodeMap[cw.weathercode] || ["-",""];
+    document.getElementById("temp").textContent = Math.round(cw.temperature) + "℃";
+    document.getElementById("wdesc").textContent = info[1] + " " + info[0];
+  }catch(err){
+    document.getElementById("wdesc").textContent = "天気を取得できませんでした";
+  }
+}
+updateWeather();
+setInterval(updateWeather, 30*60*1000); // 30分ごと
+
+// ---- ごみの日 ----
+function startOfDay(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function weeksBetween(a,b){ return Math.floor((startOfDay(a)-startOfDay(b))/(7*86400000)); }
+
+function gomiForDate(date){
+  const wd = date.getDay(); // 0=日
+  if(wd===1) return "燃やすごみ";
+  if(wd===2) return "プラスチック類";
+  if(wd===4) return "燃やすごみ";
+  if(wd===3){
+    const w = ((weeksBetween(date, GOMI_WED_REF) % 2) + 2) % 2;
+    return w===0 ? "ペットボトル" : "かん・びん";
+  }
+  if(wd===5){
+    const w = ((weeksBetween(date, GOMI_FRI_REF) % 2) + 2) % 2;
+    return w===0 ? "紙・布" : "小型不燃ごみ";
+  }
+  return null; // 土・日は収集なし
+}
+
+function updateGomi(){
+  const today = new Date();
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
+  const t = gomiForDate(today);
+  const tm = gomiForDate(tomorrow);
+  const elT = document.getElementById("gomi-today");
+  const elM = document.getElementById("gomi-tomorrow");
+  elT.textContent = t || "収集なし";
+  elT.className = "item" + (t? "" : " none");
+  elM.textContent = tm || "収集なし";
+  elM.className = "item" + (tm? "" : " none");
+}
+updateGomi();
+setInterval(updateGomi, 60*60*1000); // 1時間ごと
+
+// ---- メモ/タスク ----
+const memoEl = document.getElementById("memo-text");
+const statusEl = document.getElementById("memo-status");
+let saveTimer = null;
+let lastSavedValue = "";
+
+async function loadMemo(){
+  if(!MEMO_API_URL){ statusEl.textContent = "(端末内保存のみ)"; return; }
+  try{
+    statusEl.textContent = "読み込み中...";
+    const res = await fetch(MEMO_API_URL);
+    const data = await res.json();
+    if(document.activeElement !== memoEl){
+      memoEl.value = data.content || "";
+      lastSavedValue = memoEl.value;
+    }
+    statusEl.textContent = "同期済み";
+  }catch(err){
+    statusEl.textContent = "同期エラー";
+  }
+}
+
+async function saveMemo(){
+  const value = memoEl.value;
+  if(value === lastSavedValue) return;
+  if(!MEMO_API_URL){ statusEl.textContent = "(端末内保存のみ)"; return; }
+  try{
+    statusEl.textContent = "保存中...";
+    await fetch(MEMO_API_URL, {
+      method: "POST",
+      headers: {"Content-Type": "text/plain;charset=utf-8"},
+      body: JSON.stringify({content: value})
+    });
+    lastSavedValue = value;
+    statusEl.textContent = "保存済み";
+  }catch(err){
+    statusEl.textContent = "保存エラー";
+  }
+}
+
+memoEl.addEventListener("input", () => {
+  statusEl.textContent = "編集中...";
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveMemo, 2000); // 入力停止2秒後に自動保存
+});
+
+loadMemo();
+setInterval(loadMemo, 5*60*1000); // 5分ごとに他端末の更新を取り込み
+
+</script>
+</body>
+</html>
