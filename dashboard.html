@@ -53,6 +53,21 @@
     align-items:flex-end;
     padding-bottom: 4px;
   }
+  #season-block{
+    grid-column: 1;
+    justify-self: start;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color: var(--ink-dim);
+    max-width: 90%;
+  }
+  #season-block .h2-icon{ font-size: 34px; flex:0 0 auto; }
+  #anniv-text{
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
   #date-block{
     grid-column: 2;
     text-align:center;
@@ -126,7 +141,7 @@
   .panel h2{
     margin:0 0 14px 0;
     font-size: 19px;
-    font-weight: 400;
+    font-weight: 700;
     font-family: 'Yomogi', cursive;
     letter-spacing: 0.02em;
     color: var(--ink);
@@ -134,11 +149,12 @@
     align-items:center;
     gap:8px;
   }
+  .h2-icon{ font-size: 1.5em; line-height:1; }
 
   /* clock */
   #clock-panel{ flex: 0 0 auto; align-items:center; justify-content:center; container-type: inline-size; }
   #clock{
-    font-size: clamp(28px, 17cqw, 96px);
+    font-size: clamp(24px, 13cqw, 80px);
     font-weight: 700;
     line-height: 1;
     letter-spacing: 0.02em;
@@ -147,7 +163,7 @@
     color: var(--ink);
     white-space: nowrap;
   }
-  #clock .sec{ font-size: 0.4em; color: var(--ink-dim); }
+  #clock .sec{ font-size: 1em; color: var(--ink); }
 
   /* gomi */
   .gomi-row{
@@ -185,6 +201,12 @@
   #cal-list{ flex:1; overflow-y:auto; min-height:0; }
   .cal-daygroup{ margin-bottom: 16px; }
   .cal-daygroup:last-child{ margin-bottom: 0; }
+  .cal-daygroup.today .cal-daylabel{ font-size: 18px; }
+  .cal-daygroup.today .cal-event{ font-size: 20px; padding: 8px 0; }
+  .cal-daygroup.today .cal-event .time{ min-width: 78px; }
+  .cal-daygroup.future .cal-daylabel{ font-size: 12px; }
+  .cal-daygroup.future .cal-event{ font-size: 13px; padding: 4px 0; opacity: 0.85; }
+  .cal-daygroup.future .cal-empty{ font-size: 12px; }
   .cal-daylabel{
     font-size: 14px;
     color: var(--accent-cal);
@@ -239,8 +261,12 @@
 
 <div id="app">
   <header>
+    <div id="season-block">
+      <div id="season-icon" class="h2-icon">🍁</div>
+      <div id="anniv-text"></div>
+    </div>
     <div id="date-block">
-      <div class="youbi">☁️ <span id="youbi">-</span></div>
+      <div class="youbi"><span class="h2-icon" id="youbi-icon">☁️</span> <span id="youbi">-</span></div>
       <div class="date mincho" id="date">----年--月--日</div>
     </div>
     <div id="weather-block">
@@ -255,7 +281,7 @@
         <div id="clock">--:--<span class="sec">--</span></div>
       </div>
       <div class="panel" id="gomi-panel">
-        <h2>🗑️ ごみの日</h2>
+        <h2><span class="h2-icon">🗑️</span> ごみの日</h2>
         <div class="gomi-row">
           <span class="label">今日</span>
           <span class="item" id="gomi-today">-</span>
@@ -267,21 +293,21 @@
         <div id="gomi-note">※基本パターンの自動計算です。祝日等の変更は「さんあ〜る」アプリで必ずご確認ください。</div>
       </div>
       <div class="panel" id="forecast-panel">
-        <h2>🌤️ 5日間の予報</h2>
+        <h2><span class="h2-icon">🌤️</span> 5日間の予報</h2>
         <div id="forecast-list"></div>
       </div>
     </div>
 
     <div class="col">
       <div class="panel" id="cal-panel">
-        <h2>🗓️ 予定</h2>
+        <h2><span class="h2-icon">🗓️</span> 予定</h2>
         <div id="cal-list"></div>
       </div>
     </div>
 
     <div class="col">
       <div class="panel" id="memo-panel">
-        <h2>✏️ メモ・タスク<span id="memo-status"></span></h2>
+        <h2><span class="h2-icon">✏️</span> メモ・タスク<span id="memo-status"></span></h2>
         <textarea id="memo-text" placeholder="ここにメモやタスクを書いてください。スマホからも編集できます。"></textarea>
       </div>
     </div>
@@ -298,7 +324,10 @@ const WEATHER_LON = 135.36;
 
 // メモ/タスクの保存先(Google Apps Script の Web アプリ URL)
 // まだ準備できていない場合は空のままで構いません(メモ欄はこの端末だけで一時的に動作します)
-const MEMO_API_URL = "https://script.google.com/macros/s/AKfycbzkBhUtK3zD1X_ZX2mJXYEIz7s9WYnGVf9X2oC5Hn4MCbz-kWLZsWx_VRV-pZ8FDp4n7A/exec";
+// メモ/タスクの保存先(jsonbin.io)
+const JSONBIN_ID = "6aa38fe2ffd5d16053f8eff0";
+const JSONBIN_KEY = "$2a$10$0nLHD2dP8QyBOdKlEc3XKecWxzvdIUZaQ8Gt8dWDRBRhKV3jemRVy";
+const JSONBIN_URL = "https://api.jsonbin.io/v3/b/" + JSONBIN_ID;
 
 // Googleカレンダー(公開設定済みのカレンダーID と APIキー)
 const CALENDAR_ID = "bellyrie@gmail.com";
@@ -318,13 +347,43 @@ function updateClock(){
   const now = new Date();
   document.getElementById("clock").innerHTML =
     pad(now.getHours()) + ":" + pad(now.getMinutes()) +
-    '<span class="sec">' + pad(now.getSeconds()) + "</span>";
+    ':<span class="sec">' + pad(now.getSeconds()) + "</span>";
   document.getElementById("date").textContent =
     now.getFullYear() + "年" + (now.getMonth()+1) + "月" + now.getDate() + "日";
   document.getElementById("youbi").textContent = youbiList[now.getDay()] + "曜日";
 }
 setInterval(updateClock, 1000);
 updateClock();
+
+// ---- 季節のイラスト・今日は何の日 ----
+function updateSeason(){
+  const month = new Date().getMonth() + 1;
+  let icon = "🍁";
+  if([3,4,5].includes(month)) icon = "🌸";
+  else if([6,7,8].includes(month)) icon = "🌻";
+  else if([9,10,11].includes(month)) icon = "🍁";
+  else icon = "⛄";
+  const el = document.getElementById("season-icon");
+  if(el) el.textContent = icon;
+}
+updateSeason();
+
+async function updateAnniv(){
+  const el = document.getElementById("anniv-text");
+  if(!el) return;
+  try{
+    const now = new Date();
+    const mmdd = pad(now.getMonth()+1) + pad(now.getDate());
+    const res = await fetch("https://api.whatistoday.cyou/v2/anniv/" + mmdd);
+    const data = await res.json();
+    const item = data._items && data._items[0];
+    el.textContent = item && item.anniv1 ? "今日は「" + item.anniv1 + "」" : "";
+  }catch(err){
+    el.textContent = "";
+  }
+}
+updateAnniv();
+setInterval(() => { updateSeason(); updateAnniv(); }, 6*60*60*1000); // 6時間ごと
 
 // ---- 天気(Open-Meteo, APIキー不要) ----
 const weatherCodeMap = {
@@ -346,6 +405,8 @@ async function updateWeather(){
     const info = weatherCodeMap[cw.weathercode] || ["-",""];
     document.getElementById("temp").textContent = Math.round(cw.temperature) + "℃";
     document.getElementById("wdesc").textContent = info[1] + " " + info[0];
+    const youbiIcon = document.getElementById("youbi-icon");
+    if(youbiIcon) youbiIcon.textContent = info[1];
 
     // 5日間予報(今日を除く翌日から5日分)
     const forecastEl = document.getElementById("forecast-list");
@@ -465,8 +526,11 @@ async function updateCalendar(){
 
     let html = "";
     let colorIdx = 0;
+    let groupIdx = 0;
     groups.forEach(group => {
-      html += '<div class="cal-daygroup"><div class="cal-daylabel">' + fmtDayLabel(group.date, today) + '</div>';
+      const groupClass = groupIdx === 0 ? "today" : "future";
+      groupIdx++;
+      html += '<div class="cal-daygroup ' + groupClass + '"><div class="cal-daylabel">' + fmtDayLabel(group.date, today) + '</div>';
       if(group.events.length === 0){
         html += '<div class="cal-empty">予定なし</div>';
       }else{
@@ -493,65 +557,42 @@ let saveTimer = null;
 let lastSavedValue = "";
 
 async function loadMemo(){
-  if(!MEMO_API_URL){ statusEl.textContent = "(端末内保存のみ)"; return; }
+  if(!JSONBIN_ID){ statusEl.textContent = "(端末内保存のみ)"; return; }
   statusEl.textContent = "読み込み中...";
-  const callbackName = "__memoCb_" + Date.now();
-  return new Promise((resolve) => {
-    let done = false;
-    const timeout = setTimeout(() => {
-      if(!done){
-        done = true;
-        statusEl.textContent = "同期エラー: タイムアウト";
-        cleanup();
-        resolve();
+  try{
+    const res = await fetch(JSONBIN_URL + "/latest", {
+      headers: {
+        "X-Master-Key": JSONBIN_KEY,
+        "X-Bin-Meta": "false"
       }
-    }, 10000);
-
-    function cleanup(){
-      delete window[callbackName];
-      if(script.parentNode) script.parentNode.removeChild(script);
+    });
+    if(!res.ok) throw new Error("status " + res.status);
+    const data = await res.json();
+    if(document.activeElement !== memoEl){
+      memoEl.value = (data && data.content) || "";
+      lastSavedValue = memoEl.value;
     }
-
-    window[callbackName] = function(data){
-      if(done) return;
-      done = true;
-      clearTimeout(timeout);
-      if(document.activeElement !== memoEl){
-        memoEl.value = (data && data.content) || "";
-        lastSavedValue = memoEl.value;
-      }
-      statusEl.textContent = "同期済み";
-      cleanup();
-      resolve();
-    };
-
-    const script = document.createElement("script");
-    script.src = MEMO_API_URL + "?callback=" + callbackName + "&_t=" + Date.now();
-    script.onerror = () => {
-      if(done) return;
-      done = true;
-      clearTimeout(timeout);
-      statusEl.textContent = "同期エラー: 読み込み失敗";
-      cleanup();
-      resolve();
-    };
-    document.body.appendChild(script);
-  });
+    statusEl.textContent = "同期済み";
+  }catch(err){
+    statusEl.textContent = "同期エラー: " + (err.message || err);
+  }
 }
 
 async function saveMemo(){
   const value = memoEl.value;
   if(value === lastSavedValue) return;
-  if(!MEMO_API_URL){ statusEl.textContent = "(端末内保存のみ)"; return; }
+  if(!JSONBIN_ID){ statusEl.textContent = "(端末内保存のみ)"; return; }
   try{
     statusEl.textContent = "保存中...";
-    // Apps ScriptのCORS制限を避けるため no-cors で送信(応答内容は確認できないが送信自体は成功する)
-    await fetch(MEMO_API_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: {"Content-Type": "text/plain;charset=utf-8"},
+    const res = await fetch(JSONBIN_URL, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Master-Key": JSONBIN_KEY
+      },
       body: JSON.stringify({content: value})
     });
+    if(!res.ok) throw new Error("status " + res.status);
     lastSavedValue = value;
     statusEl.textContent = "保存済み";
   }catch(err){
