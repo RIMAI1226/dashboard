@@ -53,23 +53,22 @@
     align-items:flex-end;
     padding-bottom: 4px;
   }
-  #season-block{
-    grid-column: 1;
-    justify-self: start;
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
+  #header-spacer{ grid-column: 1; }
   #daily-photo-frame{
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
     background: var(--paper);
-    padding: 6px 6px 18px 6px;
+    padding: 10px 10px 28px 10px;
     border-radius: 4px;
-    box-shadow: 0 4px 10px rgba(91,70,54,0.2);
-    transform: rotate(-4deg);
+    box-shadow: 0 8px 20px rgba(91,70,54,0.35);
+    transform: rotate(-6deg);
+    z-index: 5;
+    pointer-events: none;
   }
   #daily-photo{
-    width: 84px;
-    height: 84px;
+    width: 200px;
+    height: 200px;
     object-fit: cover;
     display:block;
     border-radius: 2px;
@@ -87,8 +86,10 @@
     letter-spacing: 0.15em;
   }
   #date-block .date{
-    font-size: clamp(28px, 4vw, 42px);
+    font-size: clamp(38px, 5.5vw, 58px);
+    font-weight: 700;
     margin-top: 4px;
+    text-shadow: 1px 1px 0 rgba(91,70,54,0.15);
   }
   #weather-block{
     grid-column: 3;
@@ -147,7 +148,7 @@
 
   .panel h2{
     margin:0 0 14px 0;
-    font-size: 19px;
+    font-size: 24px;
     font-weight: 700;
     font-family: 'Yomogi', cursive;
     letter-spacing: 0.02em;
@@ -181,10 +182,10 @@
     border-bottom: 1px dashed var(--line);
   }
   .gomi-row:last-child{ border-bottom:none; }
-  .gomi-row .label{ color: var(--ink-dim); font-size: 15px; }
-  .gomi-row .item{ font-size: 22px; font-weight:700; color: var(--accent-gomi); }
-  .gomi-row .item.none{ color: var(--ink-dim); font-weight:400; font-size:18px; }
-  #gomi-note{ margin-top:10px; font-size:12px; color:var(--ink-dim); line-height:1.5; }
+  .gomi-row .label{ color: var(--ink-dim); font-size: 18px; }
+  .gomi-row .item{ font-size: 27px; font-weight:700; color: var(--accent-gomi); }
+  .gomi-row .item.none{ color: var(--ink-dim); font-weight:400; font-size:22px; }
+  #gomi-note{ margin-top:10px; font-size:14px; color:var(--ink-dim); line-height:1.5; }
 
   /* forecast */
   #forecast-panel{ flex:1; }
@@ -192,28 +193,29 @@
     display:flex;
     align-items:center;
     justify-content:space-between;
-    padding: 8px 0;
+    padding: 10px 0;
     border-bottom: 1px dashed var(--line);
-    font-size: 15px;
+    font-size: 18px;
   }
   .forecast-row:last-child{ border-bottom:none; }
-  .fc-day{ color: var(--ink-dim); min-width: 64px; }
-  .fc-icon{ font-size: 20px; }
+  .fc-day{ color: var(--ink-dim); min-width: 72px; }
+  .fc-icon{ font-size: 24px; }
   .fc-temp{ font-variant-numeric: tabular-nums; }
   .fc-max{ color: var(--accent-memo); font-weight:700; }
   .fc-min{ color: var(--accent-cal); }
 
   /* calendar */
-  #cal-panel{ flex:1; }
-  #cal-list{ flex:1; overflow-y:auto; min-height:0; }
+  #cal-today-panel{ flex: 0 0 auto; }
+  #cal-future-panel{ flex:1; }
+  #cal-list, #cal-today-list, #cal-future-list{ flex:1; overflow-y:auto; min-height:0; }
   .cal-daygroup{ margin-bottom: 16px; }
   .cal-daygroup:last-child{ margin-bottom: 0; }
   .cal-daygroup.today .cal-daylabel{ font-size: 18px; }
-  .cal-daygroup.today .cal-event{ font-size: 20px; padding: 8px 0; }
-  .cal-daygroup.today .cal-event .time{ min-width: 78px; }
-  .cal-daygroup.future .cal-daylabel{ font-size: 12px; }
-  .cal-daygroup.future .cal-event{ font-size: 13px; padding: 4px 0; opacity: 0.85; }
-  .cal-daygroup.future .cal-empty{ font-size: 12px; }
+  .cal-daygroup.today .cal-event{ font-size: 26px; padding: 10px 0; }
+  .cal-daygroup.today .cal-event .time{ min-width: 92px; }
+  .cal-daygroup.future .cal-daylabel{ font-size: 15px; }
+  .cal-daygroup.future .cal-event{ font-size: 16px; padding: 6px 0; opacity: 0.9; }
+  .cal-daygroup.future .cal-empty{ font-size: 14px; }
   .cal-daylabel{
     font-size: 14px;
     color: var(--accent-cal);
@@ -256,11 +258,11 @@
     border-radius: 12px;
     color: var(--ink);
     font-family: 'Zen Kaku Gothic New', sans-serif;
-    font-size: 18px;
+    font-size: 21px;
     line-height: 1.9;
     padding: 14px;
     outline:none;
-    background-image: repeating-linear-gradient(transparent, transparent 33px, var(--line) 34px);
+    background-image: repeating-linear-gradient(transparent, transparent 38px, var(--line) 39px);
   }
 </style>
 </head>
@@ -268,11 +270,7 @@
 
 <div id="app">
   <header>
-    <div id="season-block">
-      <div id="daily-photo-frame">
-        <img id="daily-photo" src="https://bz.w3h5.com/img/hd" alt="今日の写真" onerror="this.parentNode.style.display='none'">
-      </div>
-    </div>
+    <div id="header-spacer"></div>
     <div id="date-block">
       <div class="youbi"><span class="h2-icon" id="youbi-icon">☁️</span> <span id="youbi">-</span></div>
       <div class="date mincho" id="date">----年--月--日</div>
@@ -307,9 +305,13 @@
     </div>
 
     <div class="col">
-      <div class="panel" id="cal-panel">
-        <h2><span class="h2-icon">🗓️</span> 予定</h2>
-        <div id="cal-list"></div>
+      <div class="panel" id="cal-today-panel">
+        <h2><span class="h2-icon">🗓️</span> 今日の予定</h2>
+        <div id="cal-today-list"></div>
+      </div>
+      <div class="panel" id="cal-future-panel">
+        <h2><span class="h2-icon">📅</span> 今後の予定</h2>
+        <div id="cal-future-list"></div>
       </div>
     </div>
 
@@ -320,6 +322,10 @@
       </div>
     </div>
   </div>
+</div>
+
+<div id="daily-photo-frame">
+  <img id="daily-photo" src="https://bz.w3h5.com/img/hd" alt="今日の写真" onerror="this.parentNode.style.display='none'">
 </div>
 
 <script>
@@ -469,15 +475,17 @@ function fmtDayLabel(date, today){
 const dotColors = ["#e88fa3","#e8b34d","#7ab55c","#5fa8d9","#b48fd9"];
 
 async function updateCalendar(){
-  const listEl = document.getElementById("cal-list");
+  const todayListEl = document.getElementById("cal-today-list");
+  const futureListEl = document.getElementById("cal-future-list");
   if(!GOOGLE_API_KEY){
-    listEl.innerHTML = '<div class="cal-error">Google APIキーが未設定です。</div>';
+    todayListEl.innerHTML = '<div class="cal-error">Google APIキーが未設定です。</div>';
     return;
   }
   try{
     const today = startOfDay(new Date());
     const timeMin = today.toISOString();
-    const rangeEnd = new Date(today); rangeEnd.setDate(rangeEnd.getDate()+8);
+    const DAYS_AHEAD = 6; // 今日+5日
+    const rangeEnd = new Date(today); rangeEnd.setDate(rangeEnd.getDate()+DAYS_AHEAD);
     const url = "https://www.googleapis.com/calendar/v3/calendars/" +
       encodeURIComponent(CALENDAR_ID) + "/events?key=" + GOOGLE_API_KEY +
       "&timeMin=" + encodeURIComponent(timeMin) +
@@ -485,15 +493,16 @@ async function updateCalendar(){
       "&singleEvents=true&orderBy=startTime&maxResults=30";
     const res = await fetch(url);
     if(!res.ok){
-      listEl.innerHTML = '<div class="cal-error">予定を取得できませんでした(' + res.status + ')。カレンダーの公開設定・APIキーをご確認ください。</div>';
+      todayListEl.innerHTML = '<div class="cal-error">予定を取得できませんでした(' + res.status + ')。カレンダーの公開設定・APIキーをご確認ください。</div>';
+      futureListEl.innerHTML = "";
       return;
     }
     const data = await res.json();
     const events = data.items || [];
 
-    // 日付ごとにグループ化
+    // 日付ごとにグループ化(今日 + 今後5日)
     const groups = new Map();
-    for(let i=0;i<8;i++){
+    for(let i=0; i<DAYS_AHEAD; i++){
       const d = new Date(today); d.setDate(d.getDate()+i);
       groups.set(d.toDateString(), { date:d, events:[] });
     }
@@ -509,27 +518,34 @@ async function updateCalendar(){
       }
     });
 
-    let html = "";
+    let todayHtml = "";
+    let futureHtml = "";
     let colorIdx = 0;
     let groupIdx = 0;
     groups.forEach(group => {
-      const groupClass = groupIdx === 0 ? "today" : "future";
+      const isToday = groupIdx === 0;
       groupIdx++;
-      html += '<div class="cal-daygroup ' + groupClass + '"><div class="cal-daylabel">' + fmtDayLabel(group.date, today) + '</div>';
+      let block = '<div class="cal-daygroup ' + (isToday ? "today" : "future") + '">';
+      if(!isToday){
+        block += '<div class="cal-daylabel">' + fmtDayLabel(group.date, today) + '</div>';
+      }
       if(group.events.length === 0){
-        html += '<div class="cal-empty">予定なし</div>';
+        block += '<div class="cal-empty">予定なし</div>';
       }else{
         group.events.forEach(ev => {
           const color = dotColors[colorIdx % dotColors.length];
           colorIdx++;
-          html += '<div class="cal-event"><span class="bullet" style="background:' + color + '"></span><span class="time">' + ev.time + '</span><span class="title">' + escapeHtml(ev.title) + '</span></div>';
+          block += '<div class="cal-event"><span class="bullet" style="background:' + color + '"></span><span class="time">' + ev.time + '</span><span class="title">' + escapeHtml(ev.title) + '</span></div>';
         });
       }
-      html += '</div>';
+      block += '</div>';
+      if(isToday) todayHtml += block; else futureHtml += block;
     });
-    listEl.innerHTML = html;
+    todayListEl.innerHTML = todayHtml;
+    futureListEl.innerHTML = futureHtml;
   }catch(err){
-    listEl.innerHTML = '<div class="cal-error">予定の取得中にエラーが発生しました:<br>' + escapeHtml(err.message || String(err)) + '</div>';
+    todayListEl.innerHTML = '<div class="cal-error">予定の取得中にエラーが発生しました:<br>' + escapeHtml(err.message || String(err)) + '</div>';
+    futureListEl.innerHTML = "";
   }
 }
 updateCalendar();
