@@ -53,7 +53,8 @@
     align-items:flex-end;
     padding-bottom: 4px;
   }
-  #header-spacer{ grid-column: 1; }
+  #header-spacer{ grid-column: 1; display:flex; align-items:center; }
+  #season-icon{ font-size: clamp(38px, 5.5vw, 58px); line-height:1; }
   #daily-photo-frame{
     position: fixed;
     right: 18px;
@@ -188,7 +189,8 @@
   #gomi-note{ margin-top:10px; font-size:14px; color:var(--ink-dim); line-height:1.5; }
 
   /* forecast */
-  #forecast-panel{ flex:1; }
+  #forecast-panel{ flex:1; min-height:0; }
+  #forecast-list{ flex:1; overflow-y:auto; min-height:0; }
   .forecast-row{
     display:flex;
     align-items:center;
@@ -270,7 +272,7 @@
 
 <div id="app">
   <header>
-    <div id="header-spacer"></div>
+    <div id="header-spacer"><span id="season-icon">🍁</span></div>
     <div id="date-block">
       <div class="youbi"><span class="h2-icon" id="youbi-icon">☁️</span> <span id="youbi">-</span></div>
       <div class="date mincho" id="date">----年--月--日</div>
@@ -368,6 +370,21 @@ function updateClock(){
 }
 setInterval(updateClock, 1000);
 updateClock();
+
+// ---- 今日の写真(Bing壁紙) ----
+// ---- 季節のイラスト ----
+function updateSeasonIcon(){
+  const month = new Date().getMonth() + 1;
+  let icon = "🍁";
+  if([3,4,5].includes(month)) icon = "🌸";
+  else if([6,7,8].includes(month)) icon = "🌻";
+  else if([9,10,11].includes(month)) icon = "🍁";
+  else icon = "⛄";
+  const el = document.getElementById("season-icon");
+  if(el) el.textContent = icon;
+}
+updateSeasonIcon();
+setInterval(updateSeasonIcon, 60*60*1000);
 
 // ---- 今日の写真(Bing壁紙) ----
 function refreshDailyPhoto(){
