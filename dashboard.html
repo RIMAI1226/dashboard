@@ -5,30 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>おうちダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #10151c;
-    --bg-panel: #1a2029;
-    --bg-panel-2: #212a35;
-    --ink: #f5f1e6;
-    --ink-dim: #8b98a3;
-    --line: #303c48;
-    --accent-gomi: #9fd356;    /* 黄緑: ごみの日 */
-    --accent-cal: #6ec6da;     /* 水色: カレンダー */
-    --accent-weather: #f2c14e;/* 陽だまり色: 天気 */
-    --accent-memo: #f2836b;   /* 珊瑚色: メモ */
-    --accent-alert: #e0574c;
+    --bg: #e8d9bd;
+    --paper: #fbf4e6;
+    --paper-2: #fffaf0;
+    --ink: #5b4636;
+    --ink-dim: #9c8a72;
+    --line: #e3d6bd;
+    --accent-gomi: #6fa84f;   /* 黄緑: ごみの日 */
+    --accent-cal: #4fa3c9;    /* 水色: カレンダー */
+    --accent-weather: #e8a33d;/* 陽だまり色: 天気 */
+    --accent-memo: #e0735c;  /* 珊瑚色: メモ */
+    --accent-alert: #d64545;
+    --tape-1: #cfe3c4;
+    --tape-2: #f6c9d0;
   }
   *{ box-sizing: border-box; }
   html,body{
     margin:0; padding:0; height:100%;
-    background: var(--bg);
+    background:
+      radial-gradient(circle at 15% 15%, rgba(255,255,255,0.25), transparent 40%),
+      repeating-linear-gradient(100deg, #e8d9bd 0 40px, #e3d2b1 40px 80px);
     color: var(--ink);
     font-family: 'Zen Kaku Gothic New', sans-serif;
     overflow: hidden;
   }
-  .mincho{ font-family: 'Klee One', sans-serif; font-weight: 600; }
+  .mincho{ font-family: 'Yomogi', cursive; font-weight: 400; }
 
   #app{
     display:grid;
@@ -44,31 +48,34 @@
     display:flex;
     justify-content:space-between;
     align-items:flex-end;
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 18px;
+    padding-bottom: 4px;
   }
   #date-block .youbi{
     font-size: 22px;
     color: var(--ink-dim);
     letter-spacing: 0.1em;
+    font-family: 'Yomogi', cursive;
   }
   #date-block .date{
-    font-size: 40px;
-    font-weight: 700;
+    font-size: 42px;
     margin-top: 4px;
   }
   #weather-block{
     text-align:right;
     color: var(--accent-weather);
+    background: var(--paper);
+    border-radius: 16px;
+    padding: 10px 22px;
+    box-shadow: 0 3px 8px rgba(91,70,54,0.15);
   }
   #weather-block .temp{
-    font-size: 40px;
+    font-size: 36px;
     font-weight: 700;
     font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
     font-variant-numeric: tabular-nums;
   }
   #weather-block .desc{
-    font-size: 18px;
+    font-size: 16px;
     color: var(--ink-dim);
     margin-top: 2px;
   }
@@ -77,56 +84,67 @@
   #main{
     display:grid;
     grid-template-columns: minmax(0,1.1fr) minmax(0,1.4fr) minmax(0,1.1fr);
-    gap: 20px;
+    gap: 22px;
     min-height:0;
   }
-  .col{ display:flex; flex-direction:column; gap:20px; min-height:0; }
+  .col{ display:flex; flex-direction:column; gap:22px; min-height:0; }
 
   .panel{
-    background: var(--bg-panel);
-    border-radius: 18px;
-    border: 1px solid var(--line);
-    padding: 20px 24px;
+    position: relative;
+    background: var(--paper);
+    border-radius: 14px;
+    padding: 22px 26px;
     display:flex;
     flex-direction:column;
     min-height:0;
+    box-shadow: 0 4px 12px rgba(91,70,54,0.18);
   }
+  /* washiテープ風の飾り */
+  .panel::before{
+    content:"";
+    position:absolute;
+    top:-10px; left:24px;
+    width:70px; height:22px;
+    background: var(--tape-color, var(--tape-1));
+    opacity:0.85;
+    transform: rotate(-3deg);
+    border-radius: 2px;
+  }
+  #cal-panel::before{ --tape-color: var(--tape-2); left:40px; }
+  #memo-panel::before{ --tape-color: #f6dfa6; }
+
   .panel h2{
     margin:0 0 14px 0;
-    font-size: 18px;
-    font-weight: 600;
-    font-family: 'Klee One', sans-serif;
-    letter-spacing: 0.04em;
-    color: var(--ink-dim);
+    font-size: 19px;
+    font-weight: 400;
+    font-family: 'Yomogi', cursive;
+    letter-spacing: 0.02em;
+    color: var(--ink);
     display:flex;
     align-items:center;
     gap:8px;
-  }
-  .panel h2 .dot{
-    width:12px; height:12px; border-radius:50%;
-    display:inline-block;
   }
 
   /* clock */
   #clock-panel{ flex: 0 0 auto; align-items:center; justify-content:center; }
   #clock{
-    font-size: 108px;
+    font-size: 96px;
     font-weight: 700;
     line-height: 1;
     letter-spacing: 0.02em;
     font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
     font-variant-numeric: tabular-nums;
+    color: var(--ink);
   }
-  #clock .sec{ font-size: 40px; color: var(--ink-dim); }
+  #clock .sec{ font-size: 36px; color: var(--ink-dim); }
 
   /* gomi */
-  #gomi-panel h2 .dot{ background: var(--accent-gomi); }
   .gomi-row{
     display:flex;
     justify-content:space-between;
     align-items:center;
     padding: 12px 0;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px dashed var(--line);
   }
   .gomi-row:last-child{ border-bottom:none; }
   .gomi-row .label{ color: var(--ink-dim); font-size: 15px; }
@@ -135,7 +153,6 @@
   #gomi-note{ margin-top:10px; font-size:12px; color:var(--ink-dim); line-height:1.5; }
 
   /* calendar */
-  #cal-panel h2 .dot{ background: var(--accent-cal); }
   #cal-panel{ flex:1; }
   #cal-list{ flex:1; overflow-y:auto; min-height:0; }
   .cal-daygroup{ margin-bottom: 16px; }
@@ -146,19 +163,24 @@
     font-weight: 700;
     letter-spacing: 0.05em;
     margin-bottom: 6px;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px dashed var(--line);
     padding-bottom: 4px;
   }
   .cal-event{
     display:flex;
+    align-items:center;
     gap: 12px;
     padding: 6px 0;
     font-size: 16px;
     line-height: 1.5;
   }
+  .cal-event .bullet{
+    width:10px; height:10px; border-radius:50%;
+    flex: 0 0 auto;
+  }
   .cal-event .time{
     flex: 0 0 auto;
-    min-width: 90px;
+    min-width: 70px;
     color: var(--ink-dim);
     font-variant-numeric: tabular-nums;
   }
@@ -167,21 +189,21 @@
   .cal-error{ color: var(--accent-alert); font-size: 14px; }
 
   /* memo */
-  #memo-panel h2 .dot{ background: var(--accent-memo); }
   #memo-panel{ flex:1; }
-  #memo-status{ font-size:12px; color: var(--ink-dim); margin-left:auto; }
+  #memo-status{ font-size:12px; color: var(--ink-dim); margin-left:auto; font-family: 'Zen Kaku Gothic New', sans-serif; }
   #memo-text{
     flex:1;
     resize:none;
-    background: var(--bg-panel-2);
-    border: 1px solid var(--line);
-    border-radius: 14px;
+    background: var(--paper-2);
+    border: 1px dashed var(--line);
+    border-radius: 12px;
     color: var(--ink);
     font-family: 'Zen Kaku Gothic New', sans-serif;
     font-size: 18px;
-    line-height: 1.7;
+    line-height: 1.9;
     padding: 14px;
     outline:none;
+    background-image: repeating-linear-gradient(transparent, transparent 33px, var(--line) 34px);
   }
 </style>
 </head>
@@ -205,7 +227,7 @@
         <div id="clock">--:--<span class="sec">--</span></div>
       </div>
       <div class="panel" id="gomi-panel">
-        <h2><span class="dot"></span>ごみの日</h2>
+        <h2>🗑️ ごみの日</h2>
         <div class="gomi-row">
           <span class="label">今日</span>
           <span class="item" id="gomi-today">-</span>
@@ -220,14 +242,14 @@
 
     <div class="col">
       <div class="panel" id="cal-panel">
-        <h2><span class="dot"></span>予定</h2>
+        <h2>🗓️ 予定</h2>
         <div id="cal-list"></div>
       </div>
     </div>
 
     <div class="col">
       <div class="panel" id="memo-panel">
-        <h2><span class="dot"></span>メモ・タスク<span id="memo-status"></span></h2>
+        <h2>✏️ メモ・タスク<span id="memo-status"></span></h2>
         <textarea id="memo-text" placeholder="ここにメモやタスクを書いてください。スマホからも編集できます。"></textarea>
       </div>
     </div>
@@ -346,6 +368,8 @@ function fmtDayLabel(date, today){
   return (date.getMonth()+1) + "/" + date.getDate() + "(" + youbiList[date.getDay()] + ")";
 }
 
+const dotColors = ["#e88fa3","#e8b34d","#7ab55c","#5fa8d9","#b48fd9"];
+
 async function updateCalendar(){
   const listEl = document.getElementById("cal-list");
   if(!GOOGLE_API_KEY){
@@ -388,13 +412,16 @@ async function updateCalendar(){
     });
 
     let html = "";
+    let colorIdx = 0;
     groups.forEach(group => {
       html += '<div class="cal-daygroup"><div class="cal-daylabel">' + fmtDayLabel(group.date, today) + '</div>';
       if(group.events.length === 0){
         html += '<div class="cal-empty">予定なし</div>';
       }else{
         group.events.forEach(ev => {
-          html += '<div class="cal-event"><span class="time">' + ev.time + '</span><span class="title">' + escapeHtml(ev.title) + '</span></div>';
+          const color = dotColors[colorIdx % dotColors.length];
+          colorIdx++;
+          html += '<div class="cal-event"><span class="bullet" style="background:' + color + '"></span><span class="time">' + ev.time + '</span><span class="title">' + escapeHtml(ev.title) + '</span></div>';
         });
       }
       html += '</div>';
@@ -415,18 +442,49 @@ let lastSavedValue = "";
 
 async function loadMemo(){
   if(!MEMO_API_URL){ statusEl.textContent = "(端末内保存のみ)"; return; }
-  try{
-    statusEl.textContent = "読み込み中...";
-    const res = await fetch(MEMO_API_URL);
-    const data = await res.json();
-    if(document.activeElement !== memoEl){
-      memoEl.value = data.content || "";
-      lastSavedValue = memoEl.value;
+  statusEl.textContent = "読み込み中...";
+  const callbackName = "__memoCb_" + Date.now();
+  return new Promise((resolve) => {
+    let done = false;
+    const timeout = setTimeout(() => {
+      if(!done){
+        done = true;
+        statusEl.textContent = "同期エラー: タイムアウト";
+        cleanup();
+        resolve();
+      }
+    }, 10000);
+
+    function cleanup(){
+      delete window[callbackName];
+      if(script.parentNode) script.parentNode.removeChild(script);
     }
-    statusEl.textContent = "同期済み";
-  }catch(err){
-    statusEl.textContent = "同期エラー: " + (err.message || err);
-  }
+
+    window[callbackName] = function(data){
+      if(done) return;
+      done = true;
+      clearTimeout(timeout);
+      if(document.activeElement !== memoEl){
+        memoEl.value = (data && data.content) || "";
+        lastSavedValue = memoEl.value;
+      }
+      statusEl.textContent = "同期済み";
+      cleanup();
+      resolve();
+    };
+
+    const script = document.createElement("script");
+    script.src = MEMO_API_URL + "?callback=" + callbackName + "&_t=" + Date.now();
+    script.onerror = () => {
+      if(done) return;
+      done = true;
+      clearTimeout(timeout);
+      statusEl.textContent = "同期エラー: 読み込み失敗";
+      cleanup();
+      resolve();
+    };
+    document.body.appendChild(script);
+  });
 }
 
 async function saveMemo(){
@@ -435,8 +493,10 @@ async function saveMemo(){
   if(!MEMO_API_URL){ statusEl.textContent = "(端末内保存のみ)"; return; }
   try{
     statusEl.textContent = "保存中...";
+    // Apps ScriptのCORS制限を避けるため no-cors で送信(応答内容は確認できないが送信自体は成功する)
     await fetch(MEMO_API_URL, {
       method: "POST",
+      mode: "no-cors",
       headers: {"Content-Type": "text/plain;charset=utf-8"},
       body: JSON.stringify({content: value})
     });
