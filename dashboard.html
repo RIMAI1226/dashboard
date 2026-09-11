@@ -379,7 +379,7 @@ async function updateAnniv(){
     const item = data._items && data._items[0];
     el.textContent = item && item.anniv1 ? "今日は「" + item.anniv1 + "」" : "";
   }catch(err){
-    el.textContent = "";
+    el.textContent = "(取得エラー: " + (err.message || err) + ")";
   }
 }
 updateAnniv();
