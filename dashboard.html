@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="おうちダッシュボード">
 <title>おうちダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
@@ -186,7 +189,6 @@
   .gomi-row .label{ color: var(--ink-dim); font-size: 18px; }
   .gomi-row .item{ font-size: 27px; font-weight:700; color: var(--accent-gomi); }
   .gomi-row .item.none{ color: var(--ink-dim); font-weight:400; font-size:22px; }
-  #gomi-note{ margin-top:10px; font-size:14px; color:var(--ink-dim); line-height:1.5; }
 
   /* forecast */
   #forecast-panel{ flex:1; min-height:0; }
@@ -298,7 +300,6 @@
           <span class="label">明日</span>
           <span class="item" id="gomi-tomorrow">-</span>
         </div>
-        <div id="gomi-note">※基本パターンの自動計算です。祝日等の変更は「さんあ〜る」アプリで必ずご確認ください。</div>
       </div>
       <div class="panel" id="forecast-panel">
         <h2><span class="h2-icon">🌤️</span> 5日間の予報</h2>
