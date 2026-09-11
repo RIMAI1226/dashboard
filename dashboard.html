@@ -136,9 +136,9 @@
   }
 
   /* clock */
-  #clock-panel{ flex: 0 0 auto; align-items:center; justify-content:center; }
+  #clock-panel{ flex: 0 0 auto; align-items:center; justify-content:center; container-type: inline-size; }
   #clock{
-    font-size: clamp(44px, 8vw, 96px);
+    font-size: clamp(28px, 17cqw, 96px);
     font-weight: 700;
     line-height: 1;
     letter-spacing: 0.02em;
@@ -495,9 +495,16 @@ let lastSavedValue = "";
 async function loadMemo(){
   if(!MEMO_API_URL){ statusEl.textContent = "(端末内保存のみ)"; return; }
   statusEl.textContent = "読み込み中...";
-  const callbackName = "__memoCb_" + Date.now();
   return new Promise((resolve) => {
     let done = false;
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+
+    function cleanup(){
+      window.removeEventListener("message", handleMessage);
+      if(iframe.parentNode) iframe.parentNode.removeChild(iframe);
+    }
+
     const timeout = setTimeout(() => {
       if(!done){
         done = true;
@@ -507,35 +514,27 @@ async function loadMemo(){
       }
     }, 10000);
 
-    function cleanup(){
-      delete window[callbackName];
-      if(script.parentNode) script.parentNode.removeChild(script);
-    }
-
-    window[callbackName] = function(data){
+    function handleMessage(event){
       if(done) return;
+      let data = event.data;
+      if(typeof data === "string"){
+        try{ data = JSON.parse(data); }catch(e){ return; }
+      }
+      if(!data || typeof data.content === "undefined") return;
       done = true;
       clearTimeout(timeout);
       if(document.activeElement !== memoEl){
-        memoEl.value = (data && data.content) || "";
+        memoEl.value = data.content || "";
         lastSavedValue = memoEl.value;
       }
       statusEl.textContent = "同期済み";
       cleanup();
       resolve();
-    };
+    }
+    window.addEventListener("message", handleMessage);
 
-    const script = document.createElement("script");
-    script.src = MEMO_API_URL + "?callback=" + callbackName + "&_t=" + Date.now();
-    script.onerror = () => {
-      if(done) return;
-      done = true;
-      clearTimeout(timeout);
-      statusEl.textContent = "同期エラー: 読み込み失敗";
-      cleanup();
-      resolve();
-    };
-    document.body.appendChild(script);
+    iframe.src = MEMO_API_URL + "?postmsg=1&_t=" + Date.now();
+    document.body.appendChild(iframe);
   });
 }
 
