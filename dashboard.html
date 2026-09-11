@@ -26,8 +26,11 @@
   html,body{
     margin:0; padding:0; height:100%;
     background:
-      radial-gradient(circle at 15% 15%, rgba(255,255,255,0.25), transparent 40%),
-      repeating-linear-gradient(100deg, #e8d9bd 0 40px, #e3d2b1 40px 80px);
+      repeating-linear-gradient(3deg, rgba(70,42,16,0.12) 0px, rgba(70,42,16,0.12) 1px, transparent 1px, transparent 4px),
+      repeating-linear-gradient(3deg, rgba(120,80,40,0.10) 0px, rgba(120,80,40,0.10) 2px, transparent 2px, transparent 11px),
+      repeating-linear-gradient(3deg, rgba(160,112,64,0.10) 0px, rgba(160,112,64,0.10) 6px, transparent 6px, transparent 38px),
+      repeating-linear-gradient(3deg, rgba(90,58,26,0.08) 0px, rgba(90,58,26,0.08) 14px, transparent 14px, transparent 90px),
+      linear-gradient(170deg, #ddbd8d 0%, #cda06d 45%, #b98a52 100%);
     color: var(--ink);
     font-family: 'Zen Kaku Gothic New', sans-serif;
     overflow: hidden;
@@ -45,22 +48,29 @@
 
   /* ---- header ---- */
   header{
-    display:flex;
-    justify-content:space-between;
+    display:grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items:flex-end;
     padding-bottom: 4px;
   }
+  #date-block{
+    grid-column: 2;
+    text-align:center;
+  }
   #date-block .youbi{
-    font-size: 22px;
-    color: var(--ink-dim);
-    letter-spacing: 0.1em;
-    font-family: 'Yomogi', cursive;
+    font-size: 26px;
+    font-weight: 700;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    color: var(--ink);
+    letter-spacing: 0.15em;
   }
   #date-block .date{
-    font-size: 42px;
+    font-size: clamp(28px, 4vw, 42px);
     margin-top: 4px;
   }
   #weather-block{
+    grid-column: 3;
+    justify-self: end;
     text-align:right;
     color: var(--accent-weather);
     background: var(--paper);
@@ -128,15 +138,16 @@
   /* clock */
   #clock-panel{ flex: 0 0 auto; align-items:center; justify-content:center; }
   #clock{
-    font-size: 96px;
+    font-size: clamp(44px, 8vw, 96px);
     font-weight: 700;
     line-height: 1;
     letter-spacing: 0.02em;
     font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
     font-variant-numeric: tabular-nums;
     color: var(--ink);
+    white-space: nowrap;
   }
-  #clock .sec{ font-size: 36px; color: var(--ink-dim); }
+  #clock .sec{ font-size: 0.4em; color: var(--ink-dim); }
 
   /* gomi */
   .gomi-row{
@@ -151,6 +162,23 @@
   .gomi-row .item{ font-size: 22px; font-weight:700; color: var(--accent-gomi); }
   .gomi-row .item.none{ color: var(--ink-dim); font-weight:400; font-size:18px; }
   #gomi-note{ margin-top:10px; font-size:12px; color:var(--ink-dim); line-height:1.5; }
+
+  /* forecast */
+  #forecast-panel{ flex:1; }
+  .forecast-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 15px;
+  }
+  .forecast-row:last-child{ border-bottom:none; }
+  .fc-day{ color: var(--ink-dim); min-width: 64px; }
+  .fc-icon{ font-size: 20px; }
+  .fc-temp{ font-variant-numeric: tabular-nums; }
+  .fc-max{ color: var(--accent-memo); font-weight:700; }
+  .fc-min{ color: var(--accent-cal); }
 
   /* calendar */
   #cal-panel{ flex:1; }
@@ -238,6 +266,10 @@
         </div>
         <div id="gomi-note">※基本パターンの自動計算です。祝日等の変更は「さんあ〜る」アプリで必ずご確認ください。</div>
       </div>
+      <div class="panel" id="forecast-panel">
+        <h2>🌤️ 5日間の予報</h2>
+        <div id="forecast-list"></div>
+      </div>
     </div>
 
     <div class="col">
@@ -307,13 +339,33 @@ const weatherCodeMap = {
 
 async function updateWeather(){
   try{
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&current_weather=true&timezone=Asia%2FTokyo`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&forecast_days=6&timezone=Asia%2FTokyo`;
     const res = await fetch(url);
     const data = await res.json();
     const cw = data.current_weather;
     const info = weatherCodeMap[cw.weathercode] || ["-",""];
     document.getElementById("temp").textContent = Math.round(cw.temperature) + "℃";
     document.getElementById("wdesc").textContent = info[1] + " " + info[0];
+
+    // 5日間予報(今日を除く翌日から5日分)
+    const forecastEl = document.getElementById("forecast-list");
+    if(forecastEl && data.daily){
+      const days = data.daily.time;
+      let html = "";
+      for(let i=1; i<days.length && i<=5; i++){
+        const d = new Date(days[i] + "T00:00:00");
+        const code = data.daily.weathercode[i];
+        const info2 = weatherCodeMap[code] || ["-",""];
+        const max = Math.round(data.daily.temperature_2m_max[i]);
+        const min = Math.round(data.daily.temperature_2m_min[i]);
+        html += '<div class="forecast-row">' +
+          '<span class="fc-day">' + (d.getMonth()+1) + '/' + d.getDate() + '(' + youbiList[d.getDay()] + ')</span>' +
+          '<span class="fc-icon">' + info2[1] + '</span>' +
+          '<span class="fc-temp"><span class="fc-max">' + max + '°</span>/<span class="fc-min">' + min + '°</span></span>' +
+        '</div>';
+      }
+      forecastEl.innerHTML = html;
+    }
   }catch(err){
     document.getElementById("wdesc").textContent = "天気を取得できませんでした";
   }
