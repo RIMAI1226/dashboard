@@ -101,7 +101,7 @@
   /* ---- main layout ---- */
   #main{
     display:grid;
-    grid-template-columns: 2.1fr 1fr;
+    grid-template-columns: 2.9fr 1fr;
     grid-template-rows: minmax(0,1.05fr) minmax(0,1fr);
     gap: 18px;
     min-height:0;
@@ -235,7 +235,11 @@
     padding-bottom: 10px;
     border-bottom: 1px dashed var(--line);
   }
-  #today-events-list{ flex:1; overflow-y:auto; min-height:0; }
+  #today-events-list{
+    flex:1;
+    overflow-y:auto;
+    min-height:0;
+  }
   .cal-event{
     display:flex;
     align-items:center;
