@@ -263,7 +263,7 @@
   }
   .strip-daylabel{ font-weight:700; color: var(--accent-cal); font-size:19px; text-align:center; }
   .strip-weather{ text-align:center; font-size:18px; color:var(--ink-dim); }
-  .strip-weather .icon{ font-size:32px; display:block; }
+  .strip-weather .icon{ font-size:22px; display:inline; vertical-align:middle; margin-right:4px; }
   .strip-weather .fc-max{ color: var(--accent-memo); font-weight:700; }
   .strip-weather .fc-min{ color: var(--accent-cal); }
   .strip-gomi{
@@ -275,7 +275,7 @@
     padding-bottom: 8px;
     border-bottom: 1px dashed var(--line);
   }
-  .strip-gomi .icon{ font-size:26px; display:block; }
+  .strip-gomi .icon{ font-size:20px; display:inline; vertical-align:middle; margin-right:4px; }
   .strip-events{ font-size:17px; font-weight:700; color: var(--ink-dim); line-height:1.5; overflow:hidden; flex:1; text-align:left; }
 
   /* ---- memo ---- */
@@ -299,7 +299,7 @@
   #daily-photo-frame{
     position: fixed;
     right: 16px;
-    bottom: 16px;
+    top: 16px;
     background: var(--paper);
     padding: 8px 8px 22px 8px;
     border-radius: 4px;
@@ -308,7 +308,7 @@
     z-index: 5;
     pointer-events: none;
   }
-  #daily-photo{ width: 150px; height: 150px; object-fit: cover; display:block; border-radius: 2px; }
+  #daily-photo{ width: 130px; height: 130px; object-fit: cover; display:block; border-radius: 2px; }
 </style>
 </head>
 <body>
