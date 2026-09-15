@@ -56,12 +56,6 @@
   }
   #season-icon{ font-size: clamp(26px, 3.6vw, 40px); line-height:1; grid-column:1; }
   #date-block{ grid-column:2; text-align:center; }
-  #date-block .youbi{
-    font-size: clamp(18px, 2vw, 24px);
-    font-weight: 700;
-    color: var(--ink);
-    letter-spacing: 0.15em;
-  }
   #date-block .date{
     font-size: clamp(30px, 4.2vw, 44px);
     font-weight: 700;
@@ -323,8 +317,7 @@
   <header>
     <div id="season-icon">🍁</div>
     <div id="date-block">
-      <div class="youbi" id="youbi">-曜日</div>
-      <div class="date mincho" id="date">----年--月--日</div>
+      <div class="date mincho" id="date">----年--月--日(-)</div>
     </div>
     <div></div>
   </header>
@@ -398,8 +391,7 @@ function weeksBetween(a,b){ return Math.floor((startOfDay(a)-startOfDay(b))/(7*8
 function updateDate(){
   const now = new Date();
   document.getElementById("date").textContent =
-    now.getFullYear() + "年" + (now.getMonth()+1) + "月" + now.getDate() + "日";
-  document.getElementById("youbi").textContent = youbiList[now.getDay()] + "曜日";
+    now.getFullYear() + "年" + (now.getMonth()+1) + "月" + now.getDate() + "日(" + youbiList[now.getDay()] + ")";
 }
 function updateSeasonIcon(){
   const month = new Date().getMonth() + 1;
